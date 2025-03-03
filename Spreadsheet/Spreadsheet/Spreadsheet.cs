@@ -789,12 +789,29 @@ public class Spreadsheet
       else if (c.Contents is Formula f)
       {
         // Evaluate the formula
-        object result = f.Evaluate(lookupValue);
+        object result = f.Evaluate(LookupValue);
         c.Value = result; 
       }
     }
   }
 
+  public string GetSpreadsheetJson(string stringName)
+  {
+    //TODO is this it? DO i need any exception checking
+    return JsonSerializer.Serialize(this);
+  }
+
+  public void SetSpreadsheetJson(string jsonString)
+  {
+    //TODO is it okay to make this unnullable 
+    Spreadsheet ss = JsonSerializer.Deserialize<Spreadsheet>(jsonString)!;
+    foreach (var kvp in ss._cells)
+    {
+      string cellName = kvp.Key;
+      string savedStringForm = kvp.Value.StringForm;
+      SetContentsOfCell(cellName, savedStringForm);
+    }
+  }
   /// <summary>
   ///   Looks up the value of the cell for formula evaluation
   /// </summary>
@@ -804,7 +821,7 @@ public class Spreadsheet
   ///   Thrown if the specified cell does not exist or is not numeric value.
   ///   The <exception cref="ArgumentException"> is used to throw the <see cref="FormulaError"/> Object</exception>
   /// </exception>
-  private double lookupValue(string varName)
+  private double LookupValue(string varName)
   {
     varName = ValidateNameAndNormalize(varName);
     // If that variable isn’t in _cells or if its Value is not a double,

@@ -2,6 +2,8 @@
 // Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
 
+using CS3500.Spreadsheet;
+
 namespace GUI.Client.Pages;
 
 using Microsoft.AspNetCore.Components.Forms;
@@ -42,7 +44,14 @@ public partial class SpreadsheetPage
     ///   <remarks>Backing Store for HTML</remarks>
     /// </summary>
     private string[,] CellsBackingStore { get; set; } = new string[ROWS, COLS];
+    private string CurrentSelectedCell = "";
+    private ElementReference TextArea;
+    private int CurrentRow = 0;
+    private int CurrentColumn = 0;
 
+    private Spreadsheet Spreadsheet = new Spreadsheet();
+    private string CurrentValue = "";
+    private string CurrentContents = "";
 
     /// <summary>
     /// Handler for when a cell is clicked
@@ -51,9 +60,24 @@ public partial class SpreadsheetPage
     /// <param name="col">The column component of the cell's coordinates</param>
     private void CellClicked( int row, int col )
     {
-
+        // Displays the cell in letter followed by number fashion, plus one for 0 offset
+        CurrentSelectedCell = $"{Alphabet[col]}{row+1}";
+        CurrentRow = row;
+        CurrentColumn = col;
+        TextArea.FocusAsync();
     }
 
+    private void CellContentChanged(ChangeEventArgs e)
+    {
+        string data = e.Value!.ToString() ?? "";
+        
+        CellsBackingStore[CurrentRow, CurrentColumn] = data;
+        
+        Spreadsheet.SetContentsOfCell(CurrentSelectedCell, data);
+        CurrentValue = Spreadsheet.GetCellValue(CurrentSelectedCell).ToString()??"";
+        
+        //TODO you might very unlikely need to call StateHasChanged() for when things don't refresh
+    }
 
     /// <summary>
     /// Saves the current spreadsheet, by providing a download of a file

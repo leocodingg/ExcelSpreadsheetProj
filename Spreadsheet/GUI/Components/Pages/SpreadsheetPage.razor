@@ -8,6 +8,11 @@
 
 <PageTitle>Spreadsheet</PageTitle>
 
+<span>
+    <input @bind="CurrentSelectedCell"readonly/>
+    <input @bind="CurrentValue"readonly/>
+    <input @ref="TextArea" @onchange="CellContentChanged"/>
+</span>
 
 <span>
     <button class="btn btn-primary" @onclick="SaveFile">Save</button>
