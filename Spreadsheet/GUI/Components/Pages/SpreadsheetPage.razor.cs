@@ -60,17 +60,25 @@ public partial class SpreadsheetPage
     /// <param name="col">The column component of the cell's coordinates</param>
     private void CellClicked( int row, int col )
     {
-        // Displays the cell in letter followed by number fashion, plus one for 0 offset
+        // Displays the cell in letter followed by number fashion, plus 1 for 0 row offset
         CurrentSelectedCell = $"{Alphabet[col]}{row+1}";
         CurrentRow = row;
         CurrentColumn = col;
         TextArea.FocusAsync();
+        
+        // Allows us to get the value of a cell by clicking on the cell
+        CurrentValue = Spreadsheet.GetCellValue(CurrentSelectedCell).ToString()??"";
     }
+    
+    
+    //TODO if you go to a new cell is it
+    //supposed to change the input box to what ever is the content or just delete it yourself
 
     private void CellContentChanged(ChangeEventArgs e)
     {
         string data = e.Value!.ToString() ?? "";
-        
+        TextArea.FocusAsync();
+
         CellsBackingStore[CurrentRow, CurrentColumn] = data;
         
         Spreadsheet.SetContentsOfCell(CurrentSelectedCell, data);
