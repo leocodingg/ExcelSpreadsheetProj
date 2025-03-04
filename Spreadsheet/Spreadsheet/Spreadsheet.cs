@@ -571,30 +571,24 @@ public class Spreadsheet
       throw new SpreadsheetReadWriteException("File not found: " + filename);
     }
 
-    // Quality of life Json options
-    var options = new JsonSerializerOptions()
-    {
-      Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-      WriteIndented = true, 
-    };
-
     // Catches all possible errors and throws SpreadSheetReadWriteException()
     try
     {
       string jsonText = File.ReadAllText(filename);
-      Spreadsheet ss = JsonSerializer.Deserialize<Spreadsheet>(jsonText, options)
-                       ?? throw new SpreadsheetReadWriteException("Null Spreadsheet object");
-      
-      foreach (var kvp in ss._cells)
-      {
-        string cellName = kvp.Key;
-        // Assumes that the saved contents are stored as a string
-        string savedStringForm = kvp.Value.StringForm ?? "";
-
-        // Rebuild the spreadsheet via your standard logic
-        // This checks for CircularException
-        SetContentsOfCell(cellName, savedStringForm);
-      }
+      // Spreadsheet ss = JsonSerializer.Deserialize<Spreadsheet>(jsonText)
+      //                  ?? throw new SpreadsheetReadWriteException("Null Spreadsheet object");
+      //
+      // foreach (var kvp in ss._cells)
+      // {
+      //   string cellName = kvp.Key;
+      //   // Assumes that the saved contents are stored as a string
+      //   string savedStringForm = kvp.Value.StringForm ?? "";
+      //
+      //   // Rebuild the spreadsheet via your standard logic
+      //   // This checks for CircularException
+      //   SetContentsOfCell(cellName, savedStringForm);
+      // }
+      SetSpreadsheetJson(jsonText);
     }
     catch (Exception e)
     {
@@ -615,15 +609,10 @@ public class Spreadsheet
   /// </exception>
   public void Save(string filename)
   {
-    var options = new JsonSerializerOptions()
-    {
-      Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-      WriteIndented = true,
-    };
-    
     try
     {
-      string jsonSerialize = JsonSerializer.Serialize(this, options);
+      // string jsonSerialize = JsonSerializer.Serialize(this);
+      string jsonSerialize = GetSpreadsheetJson();
       File.WriteAllText(filename, jsonSerialize);
     
       Changed = false;
@@ -795,16 +784,18 @@ public class Spreadsheet
     }
   }
 
-  public string GetSpreadsheetJson(string stringName)
+  public string GetSpreadsheetJson()
   {
     //TODO is this it? DO i need any exception checking
     return JsonSerializer.Serialize(this);
   }
 
+  //TODO write javadoc
   public void SetSpreadsheetJson(string jsonString)
   {
     //TODO is it okay to make this unnullable 
-    Spreadsheet ss = JsonSerializer.Deserialize<Spreadsheet>(jsonString)!;
+    Spreadsheet ss = JsonSerializer.Deserialize<Spreadsheet>(jsonString)
+                     ?? throw new SpreadsheetReadWriteException("Null Spreadsheet object");;
     foreach (var kvp in ss._cells)
     {
       string cellName = kvp.Key;

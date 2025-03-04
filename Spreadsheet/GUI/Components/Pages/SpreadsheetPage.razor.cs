@@ -49,9 +49,13 @@ public partial class SpreadsheetPage
     private int CurrentRow = 0;
     private int CurrentColumn = 0;
 
-    private Spreadsheet Spreadsheet = new Spreadsheet();
-    private string CurrentValue = "";
-    private string CurrentContents = "";
+
+    private string cellName;
+    private string oldContents;
+    private Stack<Tuple<string, string>> VersionTracker = new();
+    private Spreadsheet spreadsheet = new Spreadsheet();
+    private string currentValue = "";
+    private string currentContents = "";
 
     /// <summary>
     /// Handler for when a cell is clicked
@@ -64,27 +68,42 @@ public partial class SpreadsheetPage
         CurrentSelectedCell = $"{Alphabet[col]}{row+1}";
         CurrentRow = row;
         CurrentColumn = col;
-        TextArea.FocusAsync();
         
         // Allows us to get the value of a cell by clicking on the cell
-        CurrentValue = Spreadsheet.GetCellValue(CurrentSelectedCell).ToString()??"";
+        currentValue = spreadsheet.GetCellValue(CurrentSelectedCell).ToString()??"";
+        
+        TextArea.FocusAsync();
     }
     
     
-    //TODO if you go to a new cell is it
+    // TODO if you go to a new cell is it
     //supposed to change the input box to what ever is the content or just delete it yourself
 
+    // TODO if clicked on cell it should be contents in cell and text box and value in readonly
+    // if not clicked on cell it should be the value of the contents
     private void CellContentChanged(ChangeEventArgs e)
     {
+        //TODO should match the contents
         string data = e.Value!.ToString() ?? "";
-        TextArea.FocusAsync();
 
         CellsBackingStore[CurrentRow, CurrentColumn] = data;
         
-        Spreadsheet.SetContentsOfCell(CurrentSelectedCell, data);
-        CurrentValue = Spreadsheet.GetCellValue(CurrentSelectedCell).ToString()??"";
+        spreadsheet.SetContentsOfCell(CurrentSelectedCell, data);
+        currentValue = spreadsheet.GetCellValue(CurrentSelectedCell).ToString()??"";
+        currentContents = spreadsheet.GetCellContents(CurrentSelectedCell).ToString() ?? "";
         
+        //TODO how to implement properly
+        VersionTracker.Push(Tuple.Create(cellName, oldContents));
+        
+        TextArea.FocusAsync();
         //TODO you might very unlikely need to call StateHasChanged() for when things don't refresh
+    }
+
+    //TODO should there be a change events args?
+    private void UndoOperation(ChangeEventArgs e)
+    {
+        Tuple<string, string> lastVersion = VersionTracker.Pop();
+        spreadsheet.SetContentsOfCell(lastVersion.Item1, lastVersion.Item2);
     }
 
     /// <summary>
@@ -93,8 +112,10 @@ public partial class SpreadsheetPage
     /// </summary>
     private async void SaveFile()
     {
+        //TODO double check
+        string jsonRepresentation = spreadsheet.GetSpreadsheetJson();
         await JSRuntime.InvokeVoidAsync( "downloadFile", FileSaveName, 
-            "replace this with the json representation of the current spreadsheet" );
+            jsonRepresentation );
     }
 
     /// <summary>
@@ -125,6 +146,7 @@ public partial class SpreadsheetPage
                 fileContent = await reader.ReadToEndAsync();
 
                 // TODO: Use the loaded fileContent to replace the current spreadsheet
+                spreadsheet.SetSpreadsheetJson(fileContent);
 
                 StateHasChanged();
             }
