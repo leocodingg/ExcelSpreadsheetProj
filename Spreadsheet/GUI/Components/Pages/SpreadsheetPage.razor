@@ -9,9 +9,10 @@
 <PageTitle>Spreadsheet</PageTitle>
 
 <span>
-    <input @bind="CurrentSelectedCell"readonly/>
+    <input @bind="currentSelectedCell"readonly/>
     <input @bind="currentValue"readonly/>
-    <input @ref="TextArea" @onchange="CellContentChanged"/>
+    <input @ref="textArea" @onchange="CellContentChanged"/>
+    @* <button class="btn btn-primary" @onclick="UndoOperation">Undo</button> *@
 </span>
 
 <span>

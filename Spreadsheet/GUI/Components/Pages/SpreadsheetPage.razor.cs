@@ -44,15 +44,12 @@ public partial class SpreadsheetPage
     ///   <remarks>Backing Store for HTML</remarks>
     /// </summary>
     private string[,] CellsBackingStore { get; set; } = new string[ROWS, COLS];
-    private string CurrentSelectedCell = "";
-    private ElementReference TextArea;
-    private int CurrentRow = 0;
-    private int CurrentColumn = 0;
-
-
-    private string cellName;
-    private string oldContents;
-    private Stack<Tuple<string, string>> VersionTracker = new();
+    
+    private string currentSelectedCell = "";
+    private ElementReference textArea;
+    private int currentRow = 0;
+    private int currentColumn = 0;
+    private Stack<Tuple<string, string>> versionTracker = new();
     private Spreadsheet spreadsheet = new Spreadsheet();
     private string currentValue = "";
     private string currentContents = "";
@@ -65,14 +62,14 @@ public partial class SpreadsheetPage
     private void CellClicked( int row, int col )
     {
         // Displays the cell in letter followed by number fashion, plus 1 for 0 row offset
-        CurrentSelectedCell = $"{Alphabet[col]}{row+1}";
-        CurrentRow = row;
-        CurrentColumn = col;
+        currentSelectedCell = $"{Alphabet[col]}{row+1}";
+        currentRow = row;
+        currentColumn = col;
         
         // Allows us to get the value of a cell by clicking on the cell
-        currentValue = spreadsheet.GetCellValue(CurrentSelectedCell).ToString()??"";
+        currentValue = spreadsheet.GetCellValue(currentSelectedCell).ToString()??"";
         
-        TextArea.FocusAsync();
+        textArea.FocusAsync();
     }
     
     
@@ -86,25 +83,26 @@ public partial class SpreadsheetPage
         //TODO should match the contents
         string data = e.Value!.ToString() ?? "";
 
-        CellsBackingStore[CurrentRow, CurrentColumn] = data;
+        CellsBackingStore[currentRow, currentColumn] = data;
         
-        spreadsheet.SetContentsOfCell(CurrentSelectedCell, data);
-        currentValue = spreadsheet.GetCellValue(CurrentSelectedCell).ToString()??"";
-        currentContents = spreadsheet.GetCellContents(CurrentSelectedCell).ToString() ?? "";
+        spreadsheet.SetContentsOfCell(currentSelectedCell, data);
+        currentValue = spreadsheet.GetCellValue(currentSelectedCell).ToString()??"";
+        currentContents = spreadsheet.GetCellContents(currentSelectedCell).ToString() ?? "";
         
-        //TODO how to implement properly
-        VersionTracker.Push(Tuple.Create(cellName, oldContents));
-        
-        TextArea.FocusAsync();
+        //TODO is this implemented correctly? checks if the current state chaged is the same and does push to avoid redundant work.
+        // if(!versionTracker.Pop().Equals(Tuple.Create(currentSelectedCell, currentContents)) || versionTracker.Count == 0)
+        //     versionTracker.Push(Tuple.Create(currentSelectedCell, currentContents));
+        //
+        textArea.FocusAsync();
         //TODO you might very unlikely need to call StateHasChanged() for when things don't refresh
     }
 
     //TODO should there be a change events args?
-    private void UndoOperation(ChangeEventArgs e)
-    {
-        Tuple<string, string> lastVersion = VersionTracker.Pop();
-        spreadsheet.SetContentsOfCell(lastVersion.Item1, lastVersion.Item2);
-    }
+    // private void UndoOperation()
+    // {
+    //     Tuple<string, string> lastVersion = versionTracker.Pop();
+    //     spreadsheet.SetContentsOfCell(lastVersion.Item1, lastVersion.Item2);
+    // }
 
     /// <summary>
     /// Saves the current spreadsheet, by providing a download of a file
