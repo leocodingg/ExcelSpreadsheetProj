@@ -45,14 +45,15 @@ public partial class SpreadsheetPage
     /// </summary>
     private string[,] CellsBackingStore { get; set; } = new string[ROWS, COLS];
     
-    private string currentSelectedCell = "";
+    private string currentSelectedCell = "A1";
     private ElementReference textArea;
     private int currentRow = 0;
     private int currentColumn = 0;
+    private string currentContents = "";
+    
     private Stack<Tuple<string, string>> versionTracker = new();
     private Spreadsheet spreadsheet = new Spreadsheet();
     private string currentValue = "";
-    private string currentContents = "";
 
     /// <summary>
     /// Handler for when a cell is clicked
@@ -66,10 +67,13 @@ public partial class SpreadsheetPage
         currentRow = row;
         currentColumn = col;
         
-        // Allows us to get the value of a cell by clicking on the cell
+        currentContents = CellsBackingStore[row, col];
+        
         currentValue = spreadsheet.GetCellValue(currentSelectedCell).ToString()??"";
         
         textArea.FocusAsync();
+        
+        
     }
     
     
@@ -81,13 +85,26 @@ public partial class SpreadsheetPage
     private void CellContentChanged(ChangeEventArgs e)
     {
         //TODO should match the contents
+        // This uses the null forgiving (!) and coalescing (??)
+        // operators to get either the value that was typed in,
+        // or the empty string if it was null
         string data = e.Value!.ToString() ?? "";
 
         CellsBackingStore[currentRow, currentColumn] = data;
         
+        // This is an example of how to put something into a cell,
+        // and how to clear/update the input element.
+        // This is *not* exactly what you'll want to put into the 
+        // cell in a real spreadsheet.
+        CellsBackingStore[currentRow, currentColumn] = data;
+        currentContents = data;     
+        
+        
         spreadsheet.SetContentsOfCell(currentSelectedCell, data);
-        currentValue = spreadsheet.GetCellValue(currentSelectedCell).ToString()??"";
         currentContents = spreadsheet.GetCellContents(currentSelectedCell).ToString() ?? "";
+        
+        
+        
         
         //TODO is this implemented correctly? checks if the current state chaged is the same and does push to avoid redundant work.
         // if(!versionTracker.Pop().Equals(Tuple.Create(currentSelectedCell, currentContents)) || versionTracker.Count == 0)

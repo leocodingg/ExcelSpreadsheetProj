@@ -22,34 +22,42 @@
 
 <div>
     <div class="table-container">
+        @* @if (ShowError) *@
+        @* { *@
+        @*     <div class="centered-card text-center"> *@
+        @*         <span>@ErrorMessage</span> *@
+        @*         <br /> *@
+        @*         <button class="btn btn-danger" @onclick="DismissError">Ok</button> *@
+        @*         </div> *@
+        @* } *@
         <div class="scrollable">
             <table class="table table-bordered">
                 <thead>
-                    <tr class="fixed-header">
-                        <th scope="col">&nbsp;</th>
-                        @for ( int col = 0; col < COLS; col++ )
-                        {
-                            <th scope="col">@Alphabet[col]</th>
-                        }
-                    </tr>
+                <tr class="fixed-header">
+                    <th scope="col">&nbsp;</th>
+                    @for (int col = 0; col < COLS; col++)
+                    {
+                        <th scope="col">@Alphabet[col]</th>
+                    }
+                </tr>
                 </thead>
 
                 <tbody>
-                    @for ( int row = 0; row < ROWS; row++ )
-                    {
-                        <tr style="padding:0px !important;">
-                            <th style="padding:0px !important;" scope="row" class="fixed-column">@(row + 1)</th>
-                            @for ( int col = 0; col < COLS; col++ )
-                            {
-                                int r = row;
-                                int c = col;
+                @for (int row = 0; row < ROWS; row++)
+                {
+                    <tr style="padding:0px !important;">
+                        <th style="padding:0px !important;" scope="row" class="fixed-column">@(row + 1)</th>
+                        @for (int col = 0; col < COLS; col++)
+                        {
+                            int r = row;
+                            int c = col;
 
-                                <td @onclick="() => CellClicked(r,c)" style="padding:0px !important;">
-                                    <p class="spreadcell"> @CellsBackingStore[r, c]  </p>
-                                </td>
-                            }
-                        </tr>
-                    }
+                            <td @onclick="() => CellClicked(r, c)" style="padding:0px !important;">
+                                <p class="spreadcell"> @CellsBackingStore[r, c] </p>
+                            </td>
+                        }
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>
