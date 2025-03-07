@@ -2,6 +2,47 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>About</h1>
 
-Welcome to your new app.
+Welcome to my spreadsheet project! This project implements a web-based spreadsheet using 
+C# and Blazor. It integrates with a custom Spreadsheet class (from CS3500.Spreadsheet) 
+and a Formula class (from CS3500.Formula) to handle spreadsheet logic. Users can edit 
+cell contents, enter formulas, view evaluated values, undo changes, and load/save 
+spreadsheet data in JSON format.
+
+<h4>General Information</h4>
+
+<h6>Rows and Columns</h6>
+<p>The spreadsheet supports 50 rows and 26 columns (labeled A–Z).
+    Each cell is identified by a column letter followed by a row number (e.g., A1, B10, etc.).</p>
+
+<h6>Cell Editing</h6>
+<p>Clicking a cell selects it and displays its contents in an editable text box (e.g., =A1+10).
+    The evaluated value of the cell (e.g., 20) is shown in a read-only field.</p>
+
+<h6>Formulas</h6>
+<p>Formulas start with = (e.g., =A2 + B3 * 2).
+    The system uses FormulaFormatException to handle syntax errors and FormulaError objects 
+    to handle runtime errors (like division by zero).</p>
+
+<h6>Error Handling</h6>
+<p>If a cell’s formula leads to an error, the cell shows “Error”.
+    A modal window displays details of the error (e.g., circular references, invalid syntax, etc.).</p>
+
+<h6>Saving and Loading</h6>
+<p>Save: Serializes the entire spreadsheet to JSON and prompts a file download (default name: Spreadsheet.sprd).
+    Load: Users select a JSON file, and the code parses it to restore all cell contents and values.</p>
+
+<h4>Special Features</h4>
+
+<h6>Undo Functionality</h6>
+<p>All edits get pushed onto a stack, so you can undo the last change.
+    Undo reverts both the cell contents and any affected computations.</p>
+
+<h6>FormulaError Quality of Life</h6>
+<p>If for example A1 is 1 and B1 is "=A1+1" and you happen to remove the dependency of A1, 
+    the GUI will show a pop up for the FormulaError and display that in the cell and everytime you click on it
+    it will show you the problem. This is a super small detail but just want to show you how it works
+    you are still able to edit and it still behaves like a regular spreadsheet. There will still be an error in the cell.</p>
+    
+    
