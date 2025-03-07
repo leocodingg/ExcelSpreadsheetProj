@@ -10,7 +10,7 @@ and a Formula class (from CS3500.Formula) to handle spreadsheet logic. Users can
 cell contents, enter formulas, view evaluated values, undo changes, and load/save 
 spreadsheet data in JSON format.
 
-<h4>General Information</h4>
+<h3>General Information</h3>
 
 <h6>Rows and Columns</h6>
 <p>The spreadsheet supports 50 rows and 26 columns (labeled A–Z).
@@ -33,7 +33,10 @@ spreadsheet data in JSON format.
 <p>Save: Serializes the entire spreadsheet to JSON and prompts a file download (default name: Spreadsheet.sprd).
     Load: Users select a JSON file, and the code parses it to restore all cell contents and values.</p>
 
-<h4>Special Features</h4>
+<h3>Special Features</h3>
+
+<h6>Highlighted Selected Cell</h6>
+<p>The current selected cell is highlighted upon selection for better user experience.</p>
 
 <h6>Undo Functionality</h6>
 <p>All edits get pushed onto a stack, so you can undo the last change.
