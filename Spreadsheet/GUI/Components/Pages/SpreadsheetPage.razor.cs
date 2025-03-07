@@ -1,9 +1,12 @@
 ﻿// <summary>
 //   <para>
-//     TODO This is the logic of a partial class for the frontend of the GUI to interact with.
+//     Page component for the spreadsheet application that handles user interactions and spreadsheet operations
 //   </para>
 //   <para>
-//    TODO
+//     It provides an interface for selecting cells, editing their contents, and displaying
+//     evaluated values (or errors, if formulas are invalid or circular). Additionally, the class
+//     handles saving/loading spreadsheet data to/from JSON, undo operations, and shows a modal
+//     for error messages (e.g., circular references or syntax issues).
 //   </para>
 // </summary>
 // <authors> [Leo Yu], [Ethan Edwards] </authors>
@@ -24,51 +27,96 @@ using System.Diagnostics;
 /// <summary>
 /// Page component for the spreadsheet application that handles user interactions and spreadsheet operations
 /// </summary>
+/// <summary>
+/// Represents the Blazor page component for the spreadsheet application,
+/// responsible for handling all UI interactions (clicks, typing, file IO, etc.)
+/// and coordinating with the underlying <see cref="Spreadsheet"/> logic.
+/// </summary>
 public partial class SpreadsheetPage
 {
     /// <summary>
-    /// Based on your computer, you could shrink/grow this value based on performance.
+    /// Number of rows to display in the spreadsheet UI.
+    /// Adjust this for performance or usability if desired.
     /// </summary>
     private const int ROWS = 50;
 
     /// <summary>
-    /// Number of columns, which will be labeled A-Z.
+    /// Number of columns to display in the spreadsheet UI.
+    /// They are labeled from 'A' to 'Z'.
     /// </summary>
     private const int COLS = 26;
 
     /// <summary>
-    /// Provides an easy way to convert from an index to a letter (0 -> A)
+    /// Provides a way to map column indices (0,1,2,...) to letters (A,B,C,...).
     /// </summary>
     private char[] Alphabet { get; } = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
 
-
     /// <summary>
-    ///   Gets or sets the name of the file to be saved
+    /// The filename to use when saving the spreadsheet to disk.
+    /// This can be changed by the user or left as a default.
     /// </summary>
     private string FileSaveName { get; set; } = "Spreadsheet.sprd";
 
-
     /// <summary>
-    ///   <para> Gets or sets the data for all of the cells in the spreadsheet GUI. </para>
-    ///   <remarks>Backing Store for HTML</remarks>
+    /// A 2D array of strings that backs the HTML display for the grid cells.
+    /// This is updated whenever a cell changes, to show the cell's evaluated value or an error message.
     /// </summary>
     private string[,] CellsBackingStore { get; set; } = new string[ROWS, COLS];
     
-    //TODO write javadoc for member variables
+    /// <summary>
+    /// The normalized name of the currently selected cell in the spreadsheet.
+    /// By default, this is "A1".
+    /// </summary>
     private string currentSelectedCell = "A1";
-    private ElementReference textArea;
-    
-    // ------- Added Spreadsheet Logic -------
 
+    /// <summary>
+    /// A reference to the HTML input area (the text box) for the cell's formula/content,
+    /// allowing us to programmatically focus it after updates.
+    /// </summary>
+    private ElementReference textArea;
+
+    /// <summary>
+    /// Tracks the current row of the selected cell for convenience, so we don't have to parse from the cell name.
+    /// </summary>
     private int currentRow = 0;
+
+    /// <summary>
+    /// Tracks the current column of the selected cell for convenience, so we don't have to parse from the cell name.
+    /// </summary>
     private int currentColumn = 0;
+
+    /// <summary>
+    /// Stores the user-editable text of the currently selected cell (including '=' if it's a formula).
+    /// This is bound to the UI text box.
+    /// </summary>
     private string currentContents = "";
+
+    /// <summary>
+    /// A stack used to implement "undo" functionality. Each entry represents
+    /// a (cellName, oldContents) pair that allows reverting the last edit.
+    /// </summary>
     private Stack<Tuple<string, string>> versionTracker = new();
+
+    /// <summary>
+    /// The underlying spreadsheet model from PS6/PS7 code. We delegate all
+    /// cell content/values to this Spreadsheet object.
+    /// </summary>
     private Spreadsheet spreadsheet = new Spreadsheet();
+
+    /// <summary>
+    /// Displays the evaluated value of the currently selected cell.
+    /// This is read-only in the UI, showing the result of the cell's formula or direct content.
+    /// </summary>
     private string currentValue = "";
 
-    // ------- Error handling properties -------
+    /// <summary>
+    /// Indicates whether an error modal dialog should be displayed in the UI.
+    /// </summary>
     private bool ShowError { get; set; } = false;
+
+    /// <summary>
+    /// Stores the error message text displayed in the error modal.
+    /// </summary>
     private string ErrorMessage { get; set; } = "";
 
     /// <summary>
@@ -87,10 +135,12 @@ public partial class SpreadsheetPage
     }
 
     /// <summary>
-    /// Handler for when a cell is clicked
+    /// Invoked when a user clicks on a cell in the spreadsheet UI.
+    /// Updates <see cref="currentSelectedCell"/>, <see cref="currentRow"/>, <see cref="currentColumn"/>,
+    /// and displays the selected cell's contents and value in the respective UI elements.
     /// </summary>
-    /// <param name="row">The row component of the cell's coordinates</param>
-    /// <param name="col">The column component of the cell's coordinates</param>
+    /// <param name="row">The row index (0-based) of the clicked cell.</param>
+    /// <param name="col">The column index (0-based) of the clicked cell.</param>
     private void CellClicked(int row, int col)
     {
         // Displays the cell in letter followed by number fashion, plus 1 for 0 row offset
@@ -123,7 +173,9 @@ public partial class SpreadsheetPage
     }
     
     /// <summary>
-    /// Updates the display of all cells in the spreadsheet
+    /// Iterates over all rows and columns and updates the <see cref="CellsBackingStore"/>
+    /// with the evaluated values or error messages from the underlying <see cref="spreadsheet"/>.
+    /// This method is typically called after any cell content change.
     /// </summary>
     private void UpdateCellsDisplay()
     {
@@ -161,9 +213,13 @@ public partial class SpreadsheetPage
         }
     }
 
+    
     /// <summary>
-    /// Handles changes to the content of the currently selected cell
+    /// Called when the user edits the text box of the currently selected cell.
+    /// Tries to update the <see cref="spreadsheet"/> with the new text as cell contents,
+    /// handling circular references and invalid formulas gracefully.
     /// </summary>
+    /// <param name="e">A <see cref="ChangeEventArgs"/> that contains the changed text.</param>
     private void CellContentChanged(ChangeEventArgs e)
     {
         string data = e.Value?.ToString() ?? "";
@@ -199,7 +255,6 @@ public partial class SpreadsheetPage
             }
             
         }
-        //TODO should this be formula format
         catch (FormulaFormatException ex)
         {
             // Show error message for invalid formula format
