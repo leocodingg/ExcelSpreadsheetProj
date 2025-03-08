@@ -76,16 +76,6 @@ public partial class SpreadsheetPage
     private ElementReference textArea;
 
     /// <summary>
-    /// Tracks the current row of the selected cell for convenience, so we don't have to parse from the cell name.
-    /// </summary>
-    private int currentRow = 0;
-
-    /// <summary>
-    /// Tracks the current column of the selected cell for convenience, so we don't have to parse from the cell name.
-    /// </summary>
-    private int currentColumn = 0;
-
-    /// <summary>
     /// Stores the user-editable text of the currently selected cell (including '=' if it's a formula).
     /// This is bound to the UI text box.
     /// </summary>
@@ -128,8 +118,6 @@ public partial class SpreadsheetPage
         
         // Initialize with A1 selected as default
         currentSelectedCell = "A1";
-        currentRow = 0;
-        currentColumn = 0;
         currentContents = "";
         currentValue = "";
     }
@@ -145,9 +133,7 @@ public partial class SpreadsheetPage
     {
         // Displays the cell in letter followed by number fashion, plus 1 for 0 row offset
         currentSelectedCell = $"{Alphabet[col]}{row+1}";
-        currentRow = row;
-        currentColumn = col;
-        
+
         // When clicking on a cell, we want to show its contents in the editable text area
         string cellName = currentSelectedCell;
         object contents = spreadsheet.GetCellContents(cellName);
@@ -235,8 +221,6 @@ public partial class SpreadsheetPage
             // Update the current contents and value
             currentContents = data;
             currentValue = spreadsheet.GetCellValue(currentSelectedCell).ToString() ?? "";
-            
-           
             
             // Update the display of all cells
             UpdateCellsDisplay();
@@ -366,8 +350,6 @@ public partial class SpreadsheetPage
                     
                     // Reset the current cell information
                     currentSelectedCell = "A1";
-                    currentRow = 0;
-                    currentColumn = 0;
                     currentContents = spreadsheet.GetCellContents("A1").ToString() ?? "";
                     currentValue = spreadsheet.GetCellValue("A1").ToString() ?? "";
                 }
